@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <title>Document</title>
+</head>
+<body>
+<div class="page">
+  <div class="intro-area">소개영역
+    <div>
+      <p onclick="refreshChat()" style="background-color: white; color: #007bff; border: none; cursor: pointer;">🔄 새로 고침</p>
+    </div>
+    
+  </div>
+  <div class="chat-area">
+    <div class="chat-wrap">
+      <div id="chat-body" class="chat-contents">
+        <!-- <div class="chat-box">
+          <div class="profile">
+            <img src="/images/gpt_pofile.svg" alt="">
+          </div>
+          <div class="chat-text">
+            <div class="name">GPT</div>
+            <div class="chat-bubble">안녕! 오늘 하루 어때?</div>
+          </div>
+          <div class="send-time">오후 01:23</div>
+        </div> -->
+        <!-- <div class="chat-box sender">
+          <div class="chat-text">
+            <div class="chat-bubble">안녕하세요.</div>
+          </div>
+          <div class="send-time">오후 01:23</div>
+        </div> -->
+      </div>
+      <div class="send-contents">
+        <img class="attach" src="./images/ico_file.svg" alt="file" />
+        <!-- <div >
+        </div> -->
+        <div class="input">
+          <input id="user-input" type="text" />
+          <img class="send" src="./images/ico_send.svg" alt="send" onclick="sendMessage()"/> 
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="./chatgpt.js"></script>
+<script>
+
+  // 엔터키 입력 감지
+ document.getElementById('user-input').addEventListener('keydown', function(event) {
+     // 키 코드가 13이면 Enter 키
+     if (event.key === 'Enter') {
+         sendMessage();  // sendMessage 함수 호출
+     }
+ });
+
+
+ sayBot('안녕! 오늘 하루 어때?');
+
+ function sendMessage() {
+     let input = document.getElementById('user-input');
+     let message = input.value;
+     if (message.trim() !== '') {
+         let chatBody = document.getElementById('chat-body');
+
+         // 사용자 메시지 표시
+         sayUser(message); 
+         ChatGPTAPI.addUserMessage(message);
+
+         let loadingMessage = document.createElement('div');
+         loadingMessage.classList.add('chat-box', 'temp');
+
+         let html = '<div class="profile"><img src="./images/gpt_pofile.svg" alt=""></div>';
+         html += '<div class="chat-text">';
+         html += '  <div class="name">GPT</div>';
+         html += '  <div class="chat-bubble">...</div>';
+         html += '</div>';
+         html += '<div class="send-time">' + getFormattedNowTime() + '</div>';
+
+         loadingMessage.innerHTML = html;
+
+         chatBody.appendChild(loadingMessage);
+
+
+         // 챗봇 응답 표시 (간단한 예시 응답)
+         ChatGPTAPI.sendRequest().then((responseMessage) => {
+             sayBot(responseMessage);  // 응답 메시지를 sayBot 함수에 전달
+         }).catch((error) => {
+             sayBot('죄송합니다. 응답을 가져오는 데 문제가 발생했습니다.');
+             console.error('Error:', error);
+         });
+
+         // 입력창 비우기
+         input.value = '';
+
+         // 스크롤을 맨 아래로 내리기
+         chatBody.scrollTop = chatBody.scrollHeight;
+     }
+ }
+ 
+
+
+ // 챗봇 응답 표시 
+ function sayBot(message) {
+     // 로딩 메시지를 삭제
+     let loadingMessage = document.querySelector('.temp');
+     if (loadingMessage) {
+         loadingMessage.remove();  // 로딩 메시지 제거
+     }
+
+     let chatBody = document.getElementById('chat-body');
+     let botMessage = document.createElement('div');
+     botMessage.classList.add('chat-box');
+     let html = '<div class="profile"><img src="./images/gpt_pofile.svg" alt=""></div>';
+     html += '<div class="chat-text">';
+     html += '  <div class="name">GPT</div>';
+     html += '  <div class="chat-bubble">' + message + '</div>';
+     html += '</div>';
+     html += '<div class="send-time">' + getFormattedNowTime() + '</div>';
+
+     botMessage.innerHTML = html;
+
+     console.log(botMessage.innerhtml);
+     chatBody.appendChild(botMessage);
+
+ }
+
+ // 유저 채팅 표시
+ function sayUser(message) {
+     let chatBody = document.getElementById('chat-body');
+     let userMessage = document.createElement('div');
+     userMessage.classList.add('chat-box', 'sender');
+     let html = '<div class="chat-text">';
+     html += '  <div class="chat-bubble">' + message + '</div>';
+     html += '</div>';
+     html += '<div class="send-time">' + getFormattedNowTime() + '</div>';
+
+     userMessage.innerHTML = html;
+      
+     chatBody.appendChild(userMessage);
+ }
+
+ // 채팅창 비우기
+ function refreshChat() {
+     let chatBody = document.getElementById('chat-body');
+     chatBody.innerHTML = ''; // 대화창을 모두 비웁니다.
+     sayBot("안녕! 오늘 하루 어때?");
+ }
+
+ function getFormattedNowTime() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const isPM = hours >= 12;
+
+    // 오전/오후 설정
+    const period = isPM ? '오후' : '오전';
+
+    // 12시간제로 변환
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0시는 12로 설정
+
+    // 분에 0 추가
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+
+    return `${period} ${hours}:${formattedMinutes}`;
+}
+
+
+
+
+
+</script>
+
+
+</body>
+</html>
